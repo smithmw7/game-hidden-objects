@@ -193,7 +193,7 @@ body {
 .level-card-copy h2 { margin: 5px 0; font-family: Georgia, serif; font-size: 21px; font-weight: 400; }
 .level-card-copy p { margin: 0; color: #77786f; font-size: 11px; }
 .level-card-arrow { align-self: center; color: #92978e; }
-.level-card-locked { opacity: .58; grid-template-columns: 104px 1fr; }
+.level-card-locked { opacity: .58; }
 .locked-art { display: grid; place-items: center; background: #deddd6; color: #aaa9a1; font-family: Georgia,serif; font-size: 28px; }
 
 .briefing-screen { padding-bottom: 14px; }

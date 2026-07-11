@@ -51,6 +51,8 @@ Static and future dynamic levels produce the same validated `LevelDefinition`. T
 
 `npm run test:art` validates the runtime item manifest, dimensions, transparency, and visible subject coverage. Replacing an icon does not require editing its UI container or label.
 
+`Golden Hour` (`level-002`) is the architecture proof: it uses a different source resolution and entirely separate scene, thumbnail, manifest, target coordinates, and runtime item files. It is registered through `StaticLevelRepository` and plays through the same React/Phaser runtime without level-specific engine branches.
+
 ## Next Phase 1 work
 
 - Author final target regions with an overlay/editor rather than hand-entered estimates.

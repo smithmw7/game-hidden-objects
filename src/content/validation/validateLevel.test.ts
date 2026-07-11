@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { quietMorningLevel } from "../static/level-001/level";
+import { goldenHourLevel } from "../static/level-002/level";
 import { validateLevel } from "./validateLevel";
 
 describe("validateLevel", () => {
   it("accepts the bundled Level 1 definition", () => {
     expect(validateLevel(quietMorningLevel)).toEqual([]);
+  });
+
+  it("accepts the second level through the same contract", () => {
+    expect(validateLevel(goldenHourLevel)).toEqual([]);
   });
 
   it("rejects duplicate object ids and out-of-bounds regions", () => {

@@ -160,7 +160,7 @@ export function StaticPlayScreen() {
       {paused && (
         <div className="game-pause-backdrop" role="dialog" aria-modal="true" aria-label="Game paused" onPointerDown={(event) => event.stopPropagation()}>
           <div className="game-pause-panel">
-            <p className="eyebrow">Quiet Morning</p>
+            <p className="eyebrow">{level?.metadata.name ?? "Scene"}</p>
             <h2>Paused</h2>
             <button type="button" className="button" onClick={resumeGame}>Resume</button>
             <Link to="/" className="button button-secondary">Leave level</Link>

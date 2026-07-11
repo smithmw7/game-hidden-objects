@@ -16,19 +16,21 @@ export function LevelSelectScreen() {
 
   return (
     <section ref={rootRef} className="levels-screen">
-      <div className="screen-heading"><p className="eyebrow">At Home</p><h1>Choose a scene</h1><p>Take your time. There is always more to notice.</p></div>
+      <div className="screen-heading"><p className="eyebrow">The collection</p><h1>Choose a scene</h1><p>Take your time. There is always more to notice.</p></div>
       <div className="level-list">
         {levels.map((level, index) => {
           const record = progress?.levels[level.id];
-          return (
-            <Link className="level-card" to={`/levels/${level.id}`} key={level.id}>
+          const unlocked = progress?.unlockedLevelIds.includes(level.id) ?? false;
+          const content = <>
               <img src={level.thumbnailAsset} alt="" />
-              <div className="level-card-copy"><span>Level {String(index + 1).padStart(2, "0")}</span><h2>{level.name}</h2><p>{record?.completed ? `${"★".repeat(record.bestStars)}${"☆".repeat(3 - record.bestStars)} · Best ${formatTime(record.bestTimeMs)}` : "New scene"}</p></div>
-              <span className="level-card-arrow" aria-hidden="true">→</span>
-            </Link>
-          );
+              <div className="level-card-copy"><span>{level.chapter} · {String(index + 1).padStart(2, "0")}</span><h2>{level.name}</h2><p>{!unlocked ? "Complete the previous scene" : record?.completed ? `${"★".repeat(record.bestStars)}${"☆".repeat(3 - record.bestStars)} · Best ${formatTime(record.bestTimeMs)}` : "New scene"}</p></div>
+              <span className="level-card-arrow" aria-hidden="true">{unlocked ? "→" : "○"}</span>
+            </>;
+          return unlocked
+            ? <Link className="level-card" to={`/levels/${level.id}`} key={level.id}>{content}</Link>
+            : <div className="level-card level-card-locked" aria-label={`${level.name} locked`} key={level.id}>{content}</div>;
         })}
-        <div className="level-card level-card-locked" aria-label="More scenes coming soon"><div className="locked-art">02</div><div className="level-card-copy"><span>Next chapter</span><h2>More scenes soon</h2><p>The collection will continue.</p></div></div>
+        <div className="level-card level-card-locked" aria-label="More scenes coming soon"><div className="locked-art">{String(levels.length + 1).padStart(2, "0")}</div><div className="level-card-copy"><span>Next chapter</span><h2>More scenes soon</h2><p>The collection will continue.</p></div></div>
       </div>
     </section>
   );

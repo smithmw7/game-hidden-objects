@@ -8,14 +8,15 @@ export const quietMorningLevel: LevelDefinition = {
   metadata: {
     name: "Quiet Morning",
     chapter: "At Home",
+    description: "Morning light has settled across the room. Find the small keepsakes hidden among its quiet details.",
     difficulty: "tutorial",
     estimatedSeconds: 180
   },
   scene: {
     imageAsset: "content/level-001/scene.png",
     thumbnailAsset: "content/level-001/thumbnail.png",
-    nativeWidth: 1536,
-    nativeHeight: 2048,
+    nativeWidth: 1085,
+    nativeHeight: 1450,
     fitMode: "contain",
     focalPoint: { x: 0.52, y: 0.53 }
   },

@@ -28,6 +28,7 @@ export function validateLevel(level: LevelDefinition): ValidationIssue[] {
     issues.push({ path: "revision", message: "Revision must be a positive integer." });
   }
   if (!level.metadata.name.trim()) issues.push({ path: "metadata.name", message: "Name is required." });
+  if (!level.metadata.description.trim()) issues.push({ path: "metadata.description", message: "Description is required." });
   if (level.scene.nativeWidth <= 0 || level.scene.nativeHeight <= 0) {
     issues.push({ path: "scene", message: "Native scene dimensions must be positive." });
   }

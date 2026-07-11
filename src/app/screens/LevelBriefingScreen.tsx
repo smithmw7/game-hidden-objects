@@ -16,7 +16,7 @@ export function LevelBriefingScreen() {
       <div className="briefing-art"><img src={level.scene.thumbnailAsset} alt={level.metadata.name} /></div>
       <div className="briefing-copy">
         <p className="eyebrow">{level.metadata.chapter}</p><h1>{level.metadata.name}</h1>
-        <p>Morning light has settled across the room. Find all {level.objects.length} objects hidden among the details.</p>
+        <p>{level.metadata.description} Find all {level.objects.length} objects.</p>
         <div className="briefing-facts"><span><strong>{level.objects.length}</strong> objects</span><span><strong>Untimed</strong> relax and explore</span><span><strong>{level.rules.availableHints}</strong> hints</span></div>
         <Link className="button briefing-play" to={`/levels/${level.id}/play`}>Enter the room</Link>
         <Link className="quiet-link" to="/levels">Choose another scene</Link>

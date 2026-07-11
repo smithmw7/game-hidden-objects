@@ -34,6 +34,7 @@ export interface LevelDefinition {
   metadata: {
     name: string;
     chapter: string;
+    description: string;
     difficulty: LevelDifficulty;
     estimatedSeconds: number;
   };

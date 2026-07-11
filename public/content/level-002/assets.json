@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "levelId": "level-002",
+  "scene": "scene.png",
+  "sceneSize": [1024, 1536],
+  "thumbnail": "thumbnail.png",
+  "thumbnailSize": [341, 512],
+  "items": [
+    "sailboat.png",
+    "globe.png",
+    "camera.png",
+    "lantern.png",
+    "owl.png",
+    "watering-can.png",
+    "cup.png",
+    "teddy.png",
+    "key.png",
+    "magnifier.png"
+  ]
+}

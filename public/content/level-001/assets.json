@@ -2,7 +2,9 @@
   "schemaVersion": 1,
   "levelId": "level-001",
   "scene": "scene.png",
+  "sceneSize": [1085, 1450],
   "thumbnail": "thumbnail.png",
+  "thumbnailSize": [383, 512],
   "items": [
     "buddha.png",
     "key.png",
