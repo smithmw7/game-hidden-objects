@@ -8,6 +8,7 @@ import type { LevelResult } from "../../game/runtime/GameSession";
 import { recordLevelResult } from "../../platform/storage/recordLevelResult";
 import { gsap, motionDuration, motionEase, useGSAP, duration } from "../../motion/gsap";
 import { GameFeedback } from "../../platform/feedback/GameFeedback";
+import { ObjectTrayItem } from "../components/ObjectTrayItem";
 
 export function StaticPlayScreen() {
   const { levelId = "level-001" } = useParams();
@@ -62,10 +63,12 @@ export function StaticPlayScreen() {
 
   useEffect(() => {
     if (!level || !containerRef.current) return;
+    const bounds = containerRef.current.getBoundingClientRect();
+    const gameHeight = Math.round(390 * bounds.height / Math.max(1, bounds.width));
     const game = new Phaser.Game({
       type: Phaser.AUTO,
       width: 390,
-      height: 700,
+      height: gameHeight,
       parent: containerRef.current,
       backgroundColor: "#242520",
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH }
@@ -136,10 +139,7 @@ export function StaticPlayScreen() {
       {level && (
         <div className="static-object-tray" aria-label="Objects to find" onPointerDown={(event) => event.stopPropagation()}>
           {level.objects.map((object) => (
-            <div className={progress.foundObjectIds.includes(object.id) ? "static-object-card found" : "static-object-card"} key={object.id}>
-              <span>{progress.foundObjectIds.includes(object.id) ? "✓" : "○"}</span>
-              <small>{object.label}</small>
-            </div>
+            <ObjectTrayItem object={object} found={progress.foundObjectIds.includes(object.id)} key={object.id} />
           ))}
         </div>
       )}

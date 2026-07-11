@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "levelId": "level-001",
+  "scene": "scene.png",
+  "thumbnail": "thumbnail.png",
+  "items": [
+    "buddha.png",
+    "key.png",
+    "bird.png",
+    "frog.png",
+    "owl.png",
+    "turtle.png",
+    "feather.png",
+    "envelope.png",
+    "gnome.png",
+    "magnifier.png"
+  ]
+}

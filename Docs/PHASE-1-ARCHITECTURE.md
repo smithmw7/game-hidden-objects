@@ -47,7 +47,9 @@ Static and future dynamic levels produce the same validated `LevelDefinition`. T
 
 ## Level 1 package
 
-`Quiet Morning` is the first vertical-slice level. Its current scene is bundled at `public/content/level-001/scene.png`. Independent item icons will be added by the art-export phase and referenced from each object's `iconAsset` field.
+`Quiet Morning` is the first vertical-slice level. Its scene is bundled at `public/content/level-001/scene.png`; every target references an independent transparent PNG under `public/content/level-001/items`. High-resolution chroma-key sources remain separate under `art/level-001/items/source` and contain no UI or text.
+
+`npm run test:art` validates the runtime item manifest, dimensions, transparency, and visible subject coverage. Replacing an icon does not require editing its UI container or label.
 
 ## Next Phase 1 work
 

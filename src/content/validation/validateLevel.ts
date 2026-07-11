@@ -43,6 +43,9 @@ export function validateLevel(level: LevelDefinition): ValidationIssue[] {
     if (ids.has(object.id)) issues.push({ path: `${path}.id`, message: "Object ids must be unique." });
     ids.add(object.id);
     if (!object.label.trim()) issues.push({ path: `${path}.label`, message: "Label is required." });
+    if (level.source === "static" && !object.iconAsset) {
+      issues.push({ path: `${path}.iconAsset`, message: "Static targets require an independent icon asset." });
+    }
     if (!validRect(object.hitRegion)) {
       issues.push({ path: `${path}.hitRegion`, message: "Hit region must fit inside normalized scene bounds." });
     }

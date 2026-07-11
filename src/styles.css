@@ -280,6 +280,8 @@ body {
 
 .static-game-screen {
   position: relative;
+  height: 100dvh;
+  min-height: 700px;
   overflow: hidden;
   border-radius: 20px;
   background: #242520;
@@ -288,7 +290,7 @@ body {
 
 .static-game-canvas {
   width: 100%;
-  aspect-ratio: 390 / 700;
+  height: 100%;
 }
 
 .static-game-canvas canvas {
@@ -429,12 +431,12 @@ body {
 
 .static-object-card {
   flex: 0 0 72px;
-  min-height: 62px;
+  min-height: 78px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 3px;
   border: 1px solid #d8d5cc;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.62);
@@ -442,10 +444,15 @@ body {
   color: #34342f;
 }
 
+.object-icon-wrap { position: relative; display: grid; width: 48px; height: 48px; place-items: center; }
+.object-icon { width: 48px; height: 48px; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.object-icon-fallback { color: #8e9188; font-size: 24px; }
+.object-check { position: absolute; right: -2px; bottom: -1px; display: grid; width: 21px; height: 21px; place-items: center; border: 2px solid rgba(255,255,255,.9); border-radius: 50%; background: #82937a; color: white; font: 12px Arial,sans-serif; opacity: 0; }
+.static-object-card small { max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .static-object-card.found {
   border-color: #96a58d;
   color: #6c7965;
-  opacity: 0.58;
 }
 
 .author-screen {
