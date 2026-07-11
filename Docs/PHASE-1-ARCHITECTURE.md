@@ -28,6 +28,14 @@ Static and future dynamic levels produce the same validated `LevelDefinition`. T
 - Shared durations, eases, reduced-motion handling, and GSAP exports live in `src/motion`.
 - Feature code must import GSAP through `src/motion/gsap.ts`, not directly from the package.
 - Every animation must be scoped or explicitly killed during React/Phaser teardown.
+- The player Reduce Motion setting and the operating-system preference both collapse shared GSAP durations to zero.
+
+## Content safe areas
+
+- Static scenes use `contain` unless a level is explicitly authored for a fixed crop.
+- The entire authored scene must remain visible across supported device aspect ratios.
+- Persistent HUD and object tray regions must not cover target focus points.
+- Level validation rejects targets in persistent vertical UI safe areas.
 
 ## Level 1 package
 

@@ -10,6 +10,10 @@ import { WalletScreen } from "./screens/WalletScreen";
 import { ImageGenTestScreen } from "./screens/ImageGenTestScreen";
 import { StaticPlayScreen } from "./screens/StaticPlayScreen";
 import { LevelAuthorScreen } from "./screens/LevelAuthorScreen";
+import { WelcomeScreen } from "./screens/WelcomeScreen";
+import { LevelSelectScreen } from "./screens/LevelSelectScreen";
+import { LevelBriefingScreen } from "./screens/LevelBriefingScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
 
 // Hash routing keeps deep links functional on static hosts such as GitHub Pages.
 export const router = createHashRouter([
@@ -18,7 +22,11 @@ export const router = createHashRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <HomeScreen /> },
+      { path: "welcome", element: <WelcomeScreen /> },
+      { path: "levels", element: <LevelSelectScreen /> },
+      { path: "levels/:levelId", element: <LevelBriefingScreen /> },
       { path: "levels/:levelId/play", element: <StaticPlayScreen /> },
+      { path: "settings", element: <SettingsScreen /> },
       { path: "dev/levels/:levelId/author", element: <LevelAuthorScreen /> },
       { path: "create", element: <CreateScreen /> },
       { path: "enter-code", element: <EnterCodeScreen /> },

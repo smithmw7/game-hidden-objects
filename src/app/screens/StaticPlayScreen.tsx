@@ -95,7 +95,7 @@ export function StaticPlayScreen() {
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
   const timer = `${String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:${String(elapsedSeconds % 60).padStart(2, "0")}`;
 
-  if (error) return <section className="panel"><p className="error">{error}</p><Link to="/" className="button button-secondary">Back</Link></section>;
+  if (error) return <section ref={screenRef} className="panel"><p className="error">{error}</p><Link to="/" className="button button-secondary">Back</Link></section>;
 
   return (
     <section ref={screenRef} className="static-game-screen" aria-label={level?.metadata.name ?? "Loading level"}>

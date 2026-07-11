@@ -17,8 +17,14 @@ export const motionEase = {
   settle: "power3.out"
 } as const;
 
+let userReducedMotion = false;
+
+export function setUserReducedMotion(value: boolean): void {
+  userReducedMotion = value;
+}
+
 export function prefersReducedMotion(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return userReducedMotion || (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 }
 
 export function duration(value: number): number {

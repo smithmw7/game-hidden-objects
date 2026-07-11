@@ -21,6 +21,7 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
   private lastTimerSecond = -1;
   private source = { width: 1, height: 1 };
   private transform = createViewportTransform(this.source, this.source, "contain");
+  private readonly motion = new Set<gsap.core.Animation>();
 
   constructor() {
     super("StaticHiddenObjectScene");
@@ -51,7 +52,7 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
       const count = this.session.snapshot().incorrectTaps;
       this.payload.onIncorrectTap?.(count);
       const marker = this.add.circle(pointer.worldX, pointer.worldY, 9, 0xf4f1e9, 0).setStrokeStyle(1.5, 0xf4f1e9, 0.7);
-      animateIncorrectTap(marker, () => marker.destroy());
+      this.motion.add(animateIncorrectTap(marker, () => marker.destroy()));
     });
 
     level.objects.forEach((object) => {
@@ -74,7 +75,13 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
     this.session.start();
     this.payload.onProgress?.([], level.objects.length);
     this.payload.onHintsChanged?.(level.rules.availableHints);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => gsap.killTweensOf(this.children.list));
+    const stopMotion = () => {
+      this.motion.forEach((animation) => animation.kill());
+      this.motion.clear();
+      gsap.killTweensOf(this.children.list);
+    };
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, stopMotion);
+    this.events.once(Phaser.Scenes.Events.DESTROY, stopMotion);
   }
 
   update(): void {
@@ -102,14 +109,14 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
     if (!target || !this.session.useHint()) return false;
     const point = normalizedRectToScreen({ ...target.focusPoint, width: 0, height: 0 }, this.source, this.transform);
     const ring = this.add.circle(point.x, point.y, 20, 0x96a58d, 0).setStrokeStyle(3, 0xf7f5ef, 1);
-    animateHintRing(ring, () => ring.destroy());
+    this.motion.add(animateHintRing(ring, () => ring.destroy()));
     this.payload.onHintsChanged?.(this.session.snapshot().availableHints);
     return true;
   }
 
   private showFoundFeedback(x: number, y: number): void {
     const ring = this.add.circle(x, y, 18, 0x96a58d, 0.12).setStrokeStyle(2, 0xf7f5ef, 0.9);
-    animateFoundRing(ring, () => ring.destroy());
+    this.motion.add(animateFoundRing(ring, () => ring.destroy()));
   }
 
 }
