@@ -1,0 +1,52 @@
+{
+  "name": "hidden-objects",
+  "version": "0.1.0",
+  "description": "Hidden Objects social hidden object game MVP",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "ios:sync": "npx cap sync ios",
+    "ios:open": "npx cap open ios",
+    "firebase:reauth": "npx firebase-tools login --reauth",
+    "firebase:sync-env-example": "node scripts/sync-firebase-env-example.mjs",
+    "firebase:link": "npx firebase-tools use"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
+    "@gsap/react": "^2.1.2",
+    "firebase": "^12.12.1",
+    "gsap": "^3.15.0",
+    "phaser": "^4.0.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.14.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.1",
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "firebase-tools": "^15.16.0",
+    "globals": "^17.5.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.1",
+    "vite": "^8.0.10",
+    "vitest": "^4.1.10"
+  }
+}
