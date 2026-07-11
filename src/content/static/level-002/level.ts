@@ -17,7 +17,7 @@ export const goldenHourLevel: LevelDefinition = {
     thumbnailAsset: "content/level-002/thumbnail.png",
     nativeWidth: 1024,
     nativeHeight: 1536,
-    fitMode: "contain",
+    fitMode: "cover",
     focalPoint: { x: 0.52, y: 0.52 }
   },
   rules: {

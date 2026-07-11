@@ -1,85 +1,101 @@
 import type * as Phaser from "phaser";
-import { duration, gsap, motionDuration, motionEase } from "../../motion/gsap";
 
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 2.5;
 
-export interface ScrollPosition { x: number; y: number; }
+export interface Point { x: number; y: number; }
+export interface ContentBounds extends Point { width: number; height: number; }
+export interface VisibleRect extends Point { width: number; height: number; }
 
 export function clampZoom(value: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
 }
 
-export function clampScroll(position: ScrollPosition, viewport: { width: number; height: number }, zoom: number): ScrollPosition {
+/** Returns the world-space correction needed to keep the visible rectangle
+ * inside the artwork. An axis smaller than the viewport remains centered. */
+export function clampViewportDelta(visible: VisibleRect, bounds: ContentBounds, centerSmaller = true): Point {
   return {
-    x: Math.min(viewport.width - viewport.width / zoom, Math.max(0, position.x)),
-    y: Math.min(viewport.height - viewport.height / zoom, Math.max(0, position.y))
+    x: axisCorrection(visible.x, visible.width, bounds.x, bounds.width, centerSmaller),
+    y: axisCorrection(visible.y, visible.height, bounds.y, bounds.height, centerSmaller)
   };
 }
 
-export class CameraController {
-  private animation?: gsap.core.Tween;
+function axisCorrection(visibleStart: number, visibleSize: number, contentStart: number, contentSize: number, centerSmaller: boolean): number {
+  if (contentSize <= visibleSize) {
+    return centerSmaller ? contentStart + contentSize / 2 - (visibleStart + visibleSize / 2) : 0;
+  }
+  if (visibleStart < contentStart) return contentStart - visibleStart;
+  const visibleEnd = visibleStart + visibleSize;
+  const contentEnd = contentStart + contentSize;
+  return visibleEnd > contentEnd ? contentEnd - visibleEnd : 0;
+}
 
-  constructor(private readonly camera: Phaser.Cameras.Scene2D.Camera, private readonly viewport: { width: number; height: number }) {}
+export class CameraController {
+  constructor(
+    private readonly camera: Phaser.Cameras.Scene2D.Camera,
+    private readonly viewport: { width: number; height: number },
+    private readonly bounds: ContentBounds
+  ) {}
 
   get zoom(): number { return this.camera.zoom; }
-
-  zoomBy(delta: number): number {
-    return this.animateTo(this.camera.zoom + delta);
+  get state(): { zoom: number; scrollX: number; scrollY: number } {
+    return { zoom: this.camera.zoom, scrollX: this.camera.scrollX, scrollY: this.camera.scrollY };
+  }
+  worldAtScreen(point: Point): Point {
+    const world = this.camera.getWorldPoint(point.x, point.y);
+    return { x: world.x, y: world.y };
+  }
+  get visibleWorld(): VisibleRect {
+    const topLeft = this.worldAtScreen({ x: 0, y: 0 });
+    const bottomRight = this.worldAtScreen({ x: this.viewport.width, y: this.viewport.height });
+    return { x: topLeft.x, y: topLeft.y, width: bottomRight.x - topLeft.x, height: bottomRight.y - topLeft.y };
   }
 
-  reset(): number {
-    return this.animateTo(MIN_ZOOM);
-  }
-
-  setZoomImmediate(value: number, focus?: ScrollPosition): number {
-    this.animation?.kill();
+  /** Uses Phaser's camera transform as the source of truth, preserving the
+   * exact world point beneath the two-finger gesture centroid. */
+  zoomAtScreenPoint(value: number, screenPoint: Point): number {
+    const before = this.camera.getWorldPoint(screenPoint.x, screenPoint.y);
     const nextZoom = clampZoom(value);
-    const center = focus ?? {
-      x: this.camera.scrollX + this.viewport.width / (2 * this.camera.zoom),
-      y: this.camera.scrollY + this.viewport.height / (2 * this.camera.zoom)
-    };
-    const scroll = clampScroll({
-      x: center.x - this.viewport.width / (2 * nextZoom),
-      y: center.y - this.viewport.height / (2 * nextZoom)
-    }, this.viewport, nextZoom);
     this.camera.setZoom(nextZoom);
-    this.camera.setScroll(scroll.x, scroll.y);
+    this.camera.preRender();
+    const after = this.camera.getWorldPoint(screenPoint.x, screenPoint.y);
+    this.camera.scrollX += before.x - after.x;
+    this.camera.scrollY += before.y - after.y;
+    this.camera.preRender();
     return nextZoom;
   }
 
-  panBy(screenDeltaX: number, screenDeltaY: number): void {
-    if (this.camera.zoom <= MIN_ZOOM) return;
-    this.animation?.kill();
-    const scroll = clampScroll({
-      x: this.camera.scrollX - screenDeltaX / this.camera.zoom,
-      y: this.camera.scrollY - screenDeltaY / this.camera.zoom
-    }, this.viewport, this.camera.zoom);
-    this.camera.setScroll(scroll.x, scroll.y);
-  }
-
-  destroy(): void {
-    this.animation?.kill();
-  }
-
-  private animateTo(value: number): number {
+  centerOnWorldPoint(value: number, worldPoint: Point): number {
     const nextZoom = clampZoom(value);
-    const center = {
-      x: this.camera.scrollX + this.viewport.width / (2 * this.camera.zoom),
-      y: this.camera.scrollY + this.viewport.height / (2 * this.camera.zoom)
-    };
-    const scroll = clampScroll({
-      x: center.x - this.viewport.width / (2 * nextZoom),
-      y: center.y - this.viewport.height / (2 * nextZoom)
-    }, this.viewport, nextZoom);
-    this.animation?.kill();
-    this.animation = gsap.to(this.camera, {
-      zoom: nextZoom,
-      scrollX: scroll.x,
-      scrollY: scroll.y,
-      duration: duration(motionDuration.standard),
-      ease: motionEase.settle
-    });
+    this.camera.setZoom(nextZoom);
+    this.camera.centerOn(worldPoint.x, worldPoint.y);
+    this.camera.preRender();
+    this.clampToArtwork();
     return nextZoom;
+  }
+
+  panBy(screenDeltaX: number, screenDeltaY: number, clamp = true): void {
+    this.camera.scrollX -= screenDeltaX / this.camera.zoom;
+    this.camera.scrollY -= screenDeltaY / this.camera.zoom;
+    this.camera.preRender();
+    if (clamp) this.clampToArtwork();
+  }
+
+  finishGesture(): void { this.clampToArtwork(); }
+
+  destroy(): void { /* Camera owns no external resources. */ }
+
+  private clampToArtwork(centerSmaller = true): void {
+    const topLeft = this.camera.getWorldPoint(0, 0);
+    const bottomRight = this.camera.getWorldPoint(this.viewport.width, this.viewport.height);
+    const correction = clampViewportDelta({
+      x: topLeft.x,
+      y: topLeft.y,
+      width: bottomRight.x - topLeft.x,
+      height: bottomRight.y - topLeft.y
+    }, this.bounds, centerSmaller);
+    this.camera.scrollX += correction.x;
+    this.camera.scrollY += correction.y;
+    this.camera.preRender();
   }
 }

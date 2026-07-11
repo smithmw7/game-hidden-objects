@@ -28,6 +28,7 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
   private cameraController?: CameraController;
   private readonly gestures = new Map<number, { x: number; y: number; distance: number }>();
   private lastPinchDistance = 0;
+  private lastPinchMidpoint?: { x: number; y: number };
 
   constructor() {
     super("StaticHiddenObjectScene");
@@ -49,11 +50,16 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
   create(): void {
     const { width, height } = this.scale;
     const level = this.payload.level;
-    this.cameraController = new CameraController(this.cameras.main, { width, height });
-    this.input.addPointer(1);
-    this.configureGestures();
     this.source = { width: level.scene.nativeWidth, height: level.scene.nativeHeight };
     this.transform = createViewportTransform(this.source, { width, height }, level.scene.fitMode);
+    this.cameraController = new CameraController(this.cameras.main, { width, height }, {
+      x: this.transform.offsetX,
+      y: this.transform.offsetY,
+      width: this.transform.renderedWidth,
+      height: this.transform.renderedHeight
+    });
+    this.input.addPointer(1);
+    this.configureGestures();
 
     const image = this.add.image(width / 2, height / 2, level.id);
     image.setDisplaySize(this.transform.renderedWidth, this.transform.renderedHeight);
@@ -118,6 +124,16 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
     this.scene.resume();
   }
 
+  getCameraState(): { zoom: number; scrollX: number; scrollY: number; maxZoom: number; visibleWorld?: { x: number; y: number; width: number; height: number }; focalProbe?: { x: number; y: number } } {
+    const state = this.cameraController?.state ?? { zoom: MIN_ZOOM, scrollX: 0, scrollY: 0 };
+    return {
+      ...state,
+      maxZoom: 2.5,
+      visibleWorld: this.cameraController?.visibleWorld,
+      focalProbe: this.cameraController?.worldAtScreen({ x: 120, y: 300 })
+    };
+  }
+
   requestHint(): boolean {
     const found = new Set(this.session.snapshot().foundObjectIds);
     const target = this.payload.level.objects.find((object) => !found.has(object.id));
@@ -125,25 +141,10 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
     const point = normalizedRectToScreen({ ...target.focusPoint, width: 0, height: 0 }, this.source, this.transform);
     const ring = this.add.circle(point.x, point.y, 20, 0x96a58d, 0).setStrokeStyle(3, 0xf7f5ef, 1);
     this.motion.add(animateHintRing(ring, () => ring.destroy()));
-    this.cameraController?.setZoomImmediate(Math.max(this.cameras.main.zoom, 1.35), { x: point.x, y: point.y });
+    this.cameraController?.centerOnWorldPoint(Math.max(this.cameras.main.zoom, 1.35), { x: point.x, y: point.y });
     this.payload.onZoomChanged?.(this.cameras.main.zoom);
     this.payload.onHintsChanged?.(this.session.snapshot().availableHints);
     return true;
-  }
-
-  zoomIn(): void {
-    const zoom = this.cameraController?.zoomBy(0.5) ?? MIN_ZOOM;
-    this.payload.onZoomChanged?.(zoom);
-  }
-
-  zoomOut(): void {
-    const zoom = this.cameraController?.zoomBy(-0.5) ?? MIN_ZOOM;
-    this.payload.onZoomChanged?.(zoom);
-  }
-
-  resetCamera(): void {
-    const zoom = this.cameraController?.reset() ?? MIN_ZOOM;
-    this.payload.onZoomChanged?.(zoom);
   }
 
   private configureGestures(): void {
@@ -164,19 +165,29 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
       const pointer2 = this.input.pointer2;
       if (pointer1.isDown && pointer2.isDown) {
         const pinchDistance = Phaser.Math.Distance.Between(pointer1.x, pointer1.y, pointer2.x, pointer2.y);
+        const midpoint = { x: (pointer1.x + pointer2.x) / 2, y: (pointer1.y + pointer2.y) / 2 };
         if (this.lastPinchDistance > 0) {
-          const zoom = this.cameraController?.setZoomImmediate(this.cameras.main.zoom * (pinchDistance / this.lastPinchDistance));
+          if (this.lastPinchMidpoint) {
+            this.cameraController?.panBy(midpoint.x - this.lastPinchMidpoint.x, midpoint.y - this.lastPinchMidpoint.y, false);
+          }
+          const zoom = this.cameraController?.zoomAtScreenPoint(this.cameras.main.zoom * (pinchDistance / this.lastPinchDistance), midpoint);
           if (zoom !== undefined) this.payload.onZoomChanged?.(zoom);
         }
         this.lastPinchDistance = pinchDistance;
+        this.lastPinchMidpoint = midpoint;
         return;
       }
       this.lastPinchDistance = 0;
+      this.lastPinchMidpoint = undefined;
       this.cameraController?.panBy(dx, dy);
     });
     this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
       this.time.delayedCall(0, () => this.gestures.delete(pointer.id));
-      if (!this.input.pointer1.isDown || !this.input.pointer2.isDown) this.lastPinchDistance = 0;
+      if (!this.input.pointer1.isDown || !this.input.pointer2.isDown) {
+        this.lastPinchDistance = 0;
+        this.lastPinchMidpoint = undefined;
+        this.cameraController?.finishGesture();
+      }
     });
     this.payload.onZoomChanged?.(MIN_ZOOM);
   }

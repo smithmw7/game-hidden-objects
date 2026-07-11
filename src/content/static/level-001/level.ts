@@ -17,7 +17,7 @@ export const quietMorningLevel: LevelDefinition = {
     thumbnailAsset: "content/level-001/thumbnail.png",
     nativeWidth: 1085,
     nativeHeight: 1450,
-    fitMode: "contain",
+    fitMode: "cover",
     focalPoint: { x: 0.52, y: 0.53 }
   },
   rules: {

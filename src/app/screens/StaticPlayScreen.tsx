@@ -18,7 +18,6 @@ export function StaticPlayScreen() {
   const [availableHints, setAvailableHints] = useState(0);
   const [incorrectTaps, setIncorrectTaps] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [zoom, setZoom] = useState(1);
   const [error, setError] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const screenRef = useRef<HTMLElement | null>(null);
@@ -41,7 +40,7 @@ export function StaticPlayScreen() {
   }, []);
 
   useGSAP(() => {
-    gsap.from([".static-game-hud", ".static-object-tray"], {
+    gsap.from(".static-object-tray", {
       y: 18,
       autoAlpha: 0,
       stagger: 0.08,
@@ -84,7 +83,6 @@ export function StaticPlayScreen() {
       onElapsed: setElapsedMs,
       onHintsChanged: setAvailableHints,
       onIncorrectTap: (count: number) => { setIncorrectTaps(count); feedbackRef.current?.cue("miss"); },
-      onZoomChanged: setZoom,
       onLoadError: setError,
       onComplete: async (result: LevelResult) => {
         feedbackRef.current?.cue("complete");
@@ -109,6 +107,22 @@ export function StaticPlayScreen() {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   });
 
+  useEffect(() => {
+    const gameWindow = window as Window & { render_game_to_text?: () => string };
+    gameWindow.render_game_to_text = () => JSON.stringify({
+      mode: paused ? "paused" : "playing",
+      coordinateSystem: "Canvas origin top-left; x increases right and y increases down.",
+      levelId,
+      found: progress.foundObjectIds.length,
+      total: progress.total,
+      hints: availableHints,
+      misses: incorrectTaps,
+      elapsedMs,
+      camera: scene()?.getCameraState() ?? { zoom: 1, scrollX: 0, scrollY: 0, maxZoom: 2.5 }
+    });
+    return () => { delete gameWindow.render_game_to_text; };
+  });
+
   function scene(): StaticHiddenObjectScene | null {
     const activeScene = gameRef.current?.scene.getScene("StaticHiddenObjectScene");
     return activeScene instanceof StaticHiddenObjectScene ? activeScene : null;
@@ -131,33 +145,23 @@ export function StaticPlayScreen() {
 
   return (
     <section ref={screenRef} className="static-game-screen" aria-label={level?.metadata.name ?? "Loading level"}>
-      <div className="static-game-hud" onPointerDown={(event) => event.stopPropagation()}>
-        <button type="button" className="game-icon-button" aria-label="Pause" onClick={pauseGame}>Ⅱ</button>
-        <span>{timer} · {level?.metadata.name ?? "Loading"}</span>
-        <span>{progress.foundObjectIds.length} of {progress.total}</span>
-      </div>
       <div ref={containerRef} className="static-game-canvas" />
       {level && (
         <div className="static-object-tray" aria-label="Objects to find" onPointerDown={(event) => event.stopPropagation()}>
-          {level.objects.map((object) => (
-            <ObjectTrayItem object={object} found={progress.foundObjectIds.includes(object.id)} key={object.id} />
-          ))}
+          <div className="static-game-status">
+            <button type="button" className="tray-pause-button" aria-label="Pause" onClick={pauseGame}>Ⅱ</button>
+            <span><strong>{progress.foundObjectIds.length}/{progress.total}</strong><small>Found</small></span>
+            <span><strong>{timer}</strong><small>Time</small></span>
+            <span><strong>{incorrectTaps}</strong><small>Misses</small></span>
+            <button type="button" className="tray-hint-button" disabled={availableHints === 0 || paused} onClick={() => { if (scene()?.requestHint()) feedbackRef.current?.cue("hint"); }}>Hint{availableHints > 0 ? ` · ${availableHints}` : ""}</button>
+          </div>
+          <div className="static-object-list">
+            {level.objects.map((object) => (
+              <ObjectTrayItem object={object} found={progress.foundObjectIds.includes(object.id)} key={object.id} />
+            ))}
+          </div>
         </div>
       )}
-      <button
-        type="button"
-        className="game-hint-button"
-        disabled={availableHints === 0 || paused}
-        aria-label={`${availableHints} hints available`}
-        onClick={() => { if (scene()?.requestHint()) feedbackRef.current?.cue("hint"); }}
-        onPointerDown={(event) => event.stopPropagation()}
-      ><span aria-hidden="true">◌</span><small>{availableHints}</small></button>
-      <div className="game-zoom-controls" onPointerDown={(event) => event.stopPropagation()} aria-label="Zoom controls">
-        <button type="button" aria-label="Zoom out" disabled={zoom <= 1 || paused} onClick={() => scene()?.zoomOut()}>−</button>
-        <button type="button" className="zoom-level" aria-label="Reset zoom" disabled={zoom <= 1 || paused} onClick={() => scene()?.resetCamera()}>{Math.round(zoom * 100)}%</button>
-        <button type="button" aria-label="Zoom in" disabled={zoom >= 2.5 || paused} onClick={() => scene()?.zoomIn()}>+</button>
-      </div>
-      {incorrectTaps > 0 && <span className="incorrect-count" aria-live="polite">Misses {incorrectTaps}</span>}
       {paused && (
         <div className="game-pause-backdrop" role="dialog" aria-modal="true" aria-label="Game paused" onPointerDown={(event) => event.stopPropagation()}>
           <div className="game-pause-panel">
