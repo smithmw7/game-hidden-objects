@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import type { PlayerProgress } from "../../platform/storage/ProgressStore";
 import { loadPlayerProgress, updatePlayerSettings } from "../../platform/storage/playerProgress";
 import { setUserReducedMotion } from "../../motion/gsap";
@@ -15,7 +16,10 @@ export function SettingsScreen() {
   }
   return <section className="settings-screen"><div className="screen-heading"><p className="eyebrow">Preferences</p><h1>Settings</h1></div><div className="settings-panel">
     {(["musicEnabled", "soundEnabled", "hapticsEnabled", "reducedMotion"] as const).map((key) => <button type="button" className="setting-row" key={key} onClick={() => void toggle(key)}><span>{settingLabel(key)}</span><span className={settings[key] ? "toggle active" : "toggle"} aria-label={settings[key] ? "On" : "Off"}><i /></span></button>)}
-  </div></section>;
+  </div><nav className="settings-links" aria-label="About and support">
+    <Link to="/privacy">Privacy</Link>
+    <Link to="/support">Support</Link>
+  </nav></section>;
 }
 
 function settingLabel(key: keyof PlayerProgress["settings"]): string {

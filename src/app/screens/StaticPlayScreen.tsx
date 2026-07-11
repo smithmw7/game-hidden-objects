@@ -85,6 +85,7 @@ export function StaticPlayScreen() {
       onHintsChanged: setAvailableHints,
       onIncorrectTap: (count: number) => { setIncorrectTaps(count); feedbackRef.current?.cue("miss"); },
       onZoomChanged: setZoom,
+      onLoadError: setError,
       onComplete: async (result: LevelResult) => {
         feedbackRef.current?.cue("complete");
         await recordLevelResult(result);

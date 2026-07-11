@@ -2,12 +2,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "app.hiddenobjects.game",
-  appName: "Hidden Objects",
-  webDir: "dist",
-  server: {
-    androidScheme: "https",
-    cleartext: true
-  }
+  appName: "Stillroom",
+  webDir: "dist"
 };
 
 export default config;

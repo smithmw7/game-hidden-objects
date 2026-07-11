@@ -1,9 +1,10 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { HiddenObjectDefinition } from "../../content/schema/level";
 import { duration, gsap, motionDuration, motionEase, useGSAP } from "../../motion/gsap";
 
 export function ObjectTrayItem({ object, found }: { object: HiddenObjectDefinition; found: boolean }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
 
   useGSAP(() => {
     if (!found) return;
@@ -16,7 +17,7 @@ export function ObjectTrayItem({ object, found }: { object: HiddenObjectDefiniti
   return (
     <div ref={rootRef} className={found ? "static-object-card found" : "static-object-card"} data-object-id={object.id}>
       <div className="object-icon-wrap">
-        {object.iconAsset ? <img className="object-icon" src={object.iconAsset} alt="" draggable={false} /> : <span className="object-icon-fallback" aria-hidden="true">○</span>}
+        {object.iconAsset && !imageFailed ? <img className="object-icon" src={object.iconAsset} alt="" draggable={false} onError={() => setImageFailed(true)} /> : <span className="object-icon-fallback" aria-hidden="true">○</span>}
         <span className="object-check" aria-hidden="true">✓</span>
       </div>
       <small>{object.label}</small>

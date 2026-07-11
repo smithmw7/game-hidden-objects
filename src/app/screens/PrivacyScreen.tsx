@@ -1,0 +1,3 @@
+export function PrivacyScreen() {
+  return <section className="legal-screen"><p className="eyebrow">Stillroom</p><h1>Privacy</h1><p>Stillroom is designed to be private. This static release does not create accounts, show advertising, track you, use analytics, or send gameplay data to us.</p><h2>Data on your device</h2><p>Your level progress and preferences are saved locally on your device so the game can remember them. Deleting the app or clearing its website data removes that information.</p><h2>Device features</h2><p>If enabled in Settings, Stillroom uses your device’s haptics for subtle gameplay feedback. It does not access your photos, camera, contacts, microphone, or location.</p><p className="legal-updated">Effective July 11, 2026</p></section>;
+}

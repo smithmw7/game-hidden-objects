@@ -14,6 +14,7 @@ export interface StaticHiddenObjectSceneData {
   onIncorrectTap?: (count: number) => void;
   onZoomChanged?: (zoom: number) => void;
   onComplete?: (result: LevelResult) => void;
+  onLoadError?: (message: string) => void;
 }
 
 export class StaticHiddenObjectScene extends Phaser.Scene {
@@ -39,6 +40,9 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
   }
 
   preload(): void {
+    this.load.once(Phaser.Loader.Events.FILE_LOAD_ERROR, () => {
+      this.payload.onLoadError?.("The scene artwork could not be loaded. Please try again.");
+    });
     this.load.image(this.payload.level.id, this.payload.level.scene.imageAsset);
   }
 
