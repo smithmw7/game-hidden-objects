@@ -4,6 +4,7 @@ import { GameSession, type LevelResult } from "../runtime/GameSession";
 import { createViewportTransform, normalizedRectToScreen } from "../runtime/viewportTransform";
 import { animateFoundRing, animateHintRing, animateIncorrectTap } from "../../motion/gameMotion";
 import { gsap } from "../../motion/gsap";
+import { CameraController, MIN_ZOOM } from "../runtime/CameraController";
 
 export interface StaticHiddenObjectSceneData {
   level: LevelDefinition;
@@ -11,6 +12,7 @@ export interface StaticHiddenObjectSceneData {
   onElapsed?: (elapsedMs: number) => void;
   onHintsChanged?: (available: number) => void;
   onIncorrectTap?: (count: number) => void;
+  onZoomChanged?: (zoom: number) => void;
   onComplete?: (result: LevelResult) => void;
 }
 
@@ -22,6 +24,9 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
   private source = { width: 1, height: 1 };
   private transform = createViewportTransform(this.source, this.source, "contain");
   private readonly motion = new Set<gsap.core.Animation>();
+  private cameraController?: CameraController;
+  private readonly gestures = new Map<number, { x: number; y: number; distance: number }>();
+  private lastPinchDistance = 0;
 
   constructor() {
     super("StaticHiddenObjectScene");
@@ -40,14 +45,18 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
   create(): void {
     const { width, height } = this.scale;
     const level = this.payload.level;
+    this.cameraController = new CameraController(this.cameras.main, { width, height });
+    this.input.addPointer(1);
+    this.configureGestures();
     this.source = { width: level.scene.nativeWidth, height: level.scene.nativeHeight };
     this.transform = createViewportTransform(this.source, { width, height }, level.scene.fitMode);
 
     const image = this.add.image(width / 2, height / 2, level.id);
     image.setDisplaySize(this.transform.renderedWidth, this.transform.renderedHeight);
     image.setInteractive();
-    image.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    image.on("pointerup", (pointer: Phaser.Input.Pointer) => {
       if (!(pointer.event?.target instanceof HTMLCanvasElement)) return;
+      if (!this.isTap(pointer)) return;
       this.session.recordIncorrectTap();
       const count = this.session.snapshot().incorrectTaps;
       this.payload.onIncorrectTap?.(count);
@@ -60,8 +69,9 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
       const zone = this.add.zone(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, bounds.width, bounds.height);
       zone.setInteractive({ useHandCursor: true });
       zone.setData("objectId", object.id);
-      zone.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      zone.on("pointerup", (pointer: Phaser.Input.Pointer) => {
         if (!(pointer.event?.target instanceof HTMLCanvasElement)) return;
+        if (!this.isTap(pointer)) return;
         const result = this.session.findObject(object.id);
         if (zone.input?.enabled === false) return;
         zone.disableInteractive();
@@ -78,6 +88,7 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
     const stopMotion = () => {
       this.motion.forEach((animation) => animation.kill());
       this.motion.clear();
+      this.cameraController?.destroy();
       gsap.killTweensOf(this.children.list);
     };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, stopMotion);
@@ -110,8 +121,64 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
     const point = normalizedRectToScreen({ ...target.focusPoint, width: 0, height: 0 }, this.source, this.transform);
     const ring = this.add.circle(point.x, point.y, 20, 0x96a58d, 0).setStrokeStyle(3, 0xf7f5ef, 1);
     this.motion.add(animateHintRing(ring, () => ring.destroy()));
+    this.cameraController?.setZoomImmediate(Math.max(this.cameras.main.zoom, 1.35), { x: point.x, y: point.y });
+    this.payload.onZoomChanged?.(this.cameras.main.zoom);
     this.payload.onHintsChanged?.(this.session.snapshot().availableHints);
     return true;
+  }
+
+  zoomIn(): void {
+    const zoom = this.cameraController?.zoomBy(0.5) ?? MIN_ZOOM;
+    this.payload.onZoomChanged?.(zoom);
+  }
+
+  zoomOut(): void {
+    const zoom = this.cameraController?.zoomBy(-0.5) ?? MIN_ZOOM;
+    this.payload.onZoomChanged?.(zoom);
+  }
+
+  resetCamera(): void {
+    const zoom = this.cameraController?.reset() ?? MIN_ZOOM;
+    this.payload.onZoomChanged?.(zoom);
+  }
+
+  private configureGestures(): void {
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      if (!(pointer.event?.target instanceof HTMLCanvasElement)) return;
+      this.gestures.set(pointer.id, { x: pointer.x, y: pointer.y, distance: 0 });
+    });
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      const gesture = this.gestures.get(pointer.id);
+      if (!gesture || !pointer.isDown) return;
+      const dx = pointer.x - gesture.x;
+      const dy = pointer.y - gesture.y;
+      gesture.x = pointer.x;
+      gesture.y = pointer.y;
+      gesture.distance += Math.hypot(dx, dy);
+
+      const pointer1 = this.input.pointer1;
+      const pointer2 = this.input.pointer2;
+      if (pointer1.isDown && pointer2.isDown) {
+        const pinchDistance = Phaser.Math.Distance.Between(pointer1.x, pointer1.y, pointer2.x, pointer2.y);
+        if (this.lastPinchDistance > 0) {
+          const zoom = this.cameraController?.setZoomImmediate(this.cameras.main.zoom * (pinchDistance / this.lastPinchDistance));
+          if (zoom !== undefined) this.payload.onZoomChanged?.(zoom);
+        }
+        this.lastPinchDistance = pinchDistance;
+        return;
+      }
+      this.lastPinchDistance = 0;
+      this.cameraController?.panBy(dx, dy);
+    });
+    this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+      this.time.delayedCall(0, () => this.gestures.delete(pointer.id));
+      if (!this.input.pointer1.isDown || !this.input.pointer2.isDown) this.lastPinchDistance = 0;
+    });
+    this.payload.onZoomChanged?.(MIN_ZOOM);
+  }
+
+  private isTap(pointer: Phaser.Input.Pointer): boolean {
+    return (this.gestures.get(pointer.id)?.distance ?? 0) < 8;
   }
 
   private showFoundFeedback(x: number, y: number): void {

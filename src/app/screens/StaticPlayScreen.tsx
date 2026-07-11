@@ -7,6 +7,7 @@ import type { LevelDefinition } from "../../content/schema/level";
 import type { LevelResult } from "../../game/runtime/GameSession";
 import { recordLevelResult } from "../../platform/storage/recordLevelResult";
 import { gsap, motionDuration, motionEase, useGSAP, duration } from "../../motion/gsap";
+import { GameFeedback } from "../../platform/feedback/GameFeedback";
 
 export function StaticPlayScreen() {
   const { levelId = "level-001" } = useParams();
@@ -16,10 +17,13 @@ export function StaticPlayScreen() {
   const [availableHints, setAvailableHints] = useState(0);
   const [incorrectTaps, setIncorrectTaps] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [zoom, setZoom] = useState(1);
   const [error, setError] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const screenRef = useRef<HTMLElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const feedbackRef = useRef<GameFeedback | null>(null);
+  const foundCountRef = useRef(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +31,13 @@ export function StaticPlayScreen() {
       setError(reason instanceof Error ? reason.message : "Could not load the level.");
     });
   }, [levelId]);
+
+  useEffect(() => {
+    const feedback = new GameFeedback();
+    feedbackRef.current = feedback;
+    void feedback.prepare();
+    return () => { feedback.destroy(); feedbackRef.current = null; };
+  }, []);
 
   useGSAP(() => {
     gsap.from([".static-game-hud", ".static-object-tray"], {
@@ -62,11 +73,17 @@ export function StaticPlayScreen() {
     gameRef.current = game;
     game.scene.add("StaticHiddenObjectScene", StaticHiddenObjectScene, true, {
       level,
-      onProgress: (foundObjectIds: readonly string[], total: number) => setProgress({ foundObjectIds, total }),
+      onProgress: (foundObjectIds: readonly string[], total: number) => {
+        if (foundObjectIds.length > foundCountRef.current) feedbackRef.current?.cue("found");
+        foundCountRef.current = foundObjectIds.length;
+        setProgress({ foundObjectIds, total });
+      },
       onElapsed: setElapsedMs,
       onHintsChanged: setAvailableHints,
-      onIncorrectTap: setIncorrectTaps,
+      onIncorrectTap: (count: number) => { setIncorrectTaps(count); feedbackRef.current?.cue("miss"); },
+      onZoomChanged: setZoom,
       onComplete: async (result: LevelResult) => {
+        feedbackRef.current?.cue("complete");
         await recordLevelResult(result);
         navigate("/result", { state: { ...result, levelId: level.id, title: level.metadata.name } });
       }
@@ -76,6 +93,17 @@ export function StaticPlayScreen() {
       gameRef.current = null;
     };
   }, [level, navigate]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden && gameRef.current) {
+        scene()?.pauseSession();
+        setPaused(true);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  });
 
   function scene(): StaticHiddenObjectScene | null {
     const activeScene = gameRef.current?.scene.getScene("StaticHiddenObjectScene");
@@ -120,9 +148,14 @@ export function StaticPlayScreen() {
         className="game-hint-button"
         disabled={availableHints === 0 || paused}
         aria-label={`${availableHints} hints available`}
-        onClick={() => scene()?.requestHint()}
+        onClick={() => { if (scene()?.requestHint()) feedbackRef.current?.cue("hint"); }}
         onPointerDown={(event) => event.stopPropagation()}
       ><span aria-hidden="true">◌</span><small>{availableHints}</small></button>
+      <div className="game-zoom-controls" onPointerDown={(event) => event.stopPropagation()} aria-label="Zoom controls">
+        <button type="button" aria-label="Zoom out" disabled={zoom <= 1 || paused} onClick={() => scene()?.zoomOut()}>−</button>
+        <button type="button" className="zoom-level" aria-label="Reset zoom" disabled={zoom <= 1 || paused} onClick={() => scene()?.resetCamera()}>{Math.round(zoom * 100)}%</button>
+        <button type="button" aria-label="Zoom in" disabled={zoom >= 2.5 || paused} onClick={() => scene()?.zoomIn()}>+</button>
+      </div>
       {incorrectTaps > 0 && <span className="incorrect-count" aria-live="polite">Misses {incorrectTaps}</span>}
       {paused && (
         <div className="game-pause-backdrop" role="dialog" aria-modal="true" aria-label="Game paused" onPointerDown={(event) => event.stopPropagation()}>

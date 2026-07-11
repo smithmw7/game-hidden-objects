@@ -37,6 +37,14 @@ Static and future dynamic levels produce the same validated `LevelDefinition`. T
 - Persistent HUD and object tray regions must not cover target focus points.
 - Level validation rejects targets in persistent vertical UI safe areas.
 
+## Mobile interaction
+
+- `CameraController` owns the 1x to 2.5x camera range and bounded scroll math.
+- Zoom button transitions use GSAP; direct pan and pinch input update the camera synchronously.
+- Pointer movement beyond the tap tolerance cannot find an object or count as a miss.
+- Backgrounding automatically pauses the session and requires an explicit player resume.
+- Sound and haptics are routed through `GameFeedback` and respect saved player settings.
+
 ## Level 1 package
 
 `Quiet Morning` is the first vertical-slice level. Its current scene is bundled at `public/content/level-001/scene.png`. Independent item icons will be added by the art-export phase and referenced from each object's `iconAsset` field.

@@ -354,6 +354,24 @@ body {
 .game-hint-button small { position: absolute; top: -5px; right: -5px; display: grid; width: 21px; height: 21px; place-items: center; border-radius: 50%; background: #a9c8e8; color: #28323b; }
 .game-hint-button:disabled { opacity: 0.45; cursor: default; }
 
+.game-zoom-controls {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 98px;
+  display: flex;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 15px;
+  background: rgba(48,49,43,.74);
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px);
+}
+.game-zoom-controls button { min-width: 38px; height: 40px; padding: 0 10px; border: 0; border-right: 1px solid rgba(255,255,255,.16); background: transparent; color: #f7f5ef; font-size: 18px; cursor: pointer; }
+.game-zoom-controls button:last-child { border-right: 0; }
+.game-zoom-controls .zoom-level { min-width: 54px; font-size: 10px; letter-spacing: .04em; }
+.game-zoom-controls button:disabled { opacity: .35; cursor: default; }
+
 .incorrect-count {
   position: absolute;
   z-index: 2;
