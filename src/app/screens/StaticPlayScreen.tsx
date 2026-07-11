@@ -18,6 +18,8 @@ export function StaticPlayScreen() {
   const [availableHints, setAvailableHints] = useState(0);
   const [incorrectTaps, setIncorrectTaps] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [showHitAreas, setShowHitAreas] = useState(false);
   const [error, setError] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const screenRef = useRef<HTMLElement | null>(null);
@@ -59,6 +61,30 @@ export function StaticPlayScreen() {
       ease: motionEase.settle
     });
   }, { scope: screenRef, dependencies: [paused] });
+
+  useGSAP(() => {
+    if (!debugOpen) return;
+    gsap.from(".game-debug-options", {
+      y: 8,
+      autoAlpha: 0,
+      duration: duration(motionDuration.fast),
+      ease: motionEase.settle
+    });
+  }, { scope: screenRef, dependencies: [debugOpen] });
+
+  useGSAP(() => {
+    if (!debugOpen) return;
+    gsap.to(".debug-toggle", {
+      backgroundColor: showHitAreas ? "#8fa087" : "#c9c8c1",
+      duration: duration(motionDuration.fast),
+      ease: motionEase.settle
+    });
+    gsap.to(".debug-toggle b", {
+      x: showHitAreas ? 14 : 0,
+      duration: duration(motionDuration.fast),
+      ease: motionEase.settle
+    });
+  }, { scope: screenRef, dependencies: [debugOpen, showHitAreas] });
 
   useEffect(() => {
     if (!level || !containerRef.current) return;
@@ -118,7 +144,8 @@ export function StaticPlayScreen() {
       hints: availableHints,
       misses: incorrectTaps,
       elapsedMs,
-      camera: scene()?.getCameraState() ?? { zoom: 1, scrollX: 0, scrollY: 0, maxZoom: 2.5 }
+      camera: scene()?.getCameraState() ?? { zoom: 1, scrollX: 0, scrollY: 0, maxZoom: 2.5 },
+      debug: { menuOpen: debugOpen, showHitAreas }
     });
     return () => { delete gameWindow.render_game_to_text; };
   });
@@ -136,6 +163,12 @@ export function StaticPlayScreen() {
   function resumeGame() {
     scene()?.resumeSession();
     setPaused(false);
+  }
+
+  function toggleHitAreas() {
+    const visible = !showHitAreas;
+    setShowHitAreas(visible);
+    scene()?.setHitAreasVisible(visible);
   }
 
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
@@ -165,9 +198,16 @@ export function StaticPlayScreen() {
       {paused && (
         <div className="game-pause-backdrop" role="dialog" aria-modal="true" aria-label="Game paused" onPointerDown={(event) => event.stopPropagation()}>
           <div className="game-pause-panel">
-            <p className="eyebrow">{level?.metadata.name ?? "Scene"}</p>
             <h2>Paused</h2>
             <button type="button" className="button" onClick={resumeGame}>Resume</button>
+            <button type="button" className="button button-secondary game-debug-button" aria-expanded={debugOpen} onClick={() => setDebugOpen((open) => !open)}>Debug</button>
+            {debugOpen && <div className="game-debug-options" aria-label="Debug options">
+              <p>Debug options</p>
+              <button type="button" className="game-debug-row" role="switch" aria-checked={showHitAreas} onClick={toggleHitAreas}>
+                <span><strong>Show hit areas</strong><small>Actual rectangular tap regions</small></span>
+                <i className={showHitAreas ? "debug-toggle active" : "debug-toggle"}><b /></i>
+              </button>
+            </div>}
             <Link to="/" className="button button-secondary">Leave level</Link>
           </div>
         </div>

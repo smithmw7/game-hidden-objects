@@ -17,5 +17,9 @@ Original prompt: Complete all phases of the static-first hidden objects game wit
 
 Validation passed with simulated mobile touch input: focal-point error under 0.001 world pixels, 2.5x max zoom enforced, aggressive pans stayed within full-bleed artwork bounds, Hint remained edge-safe, pause/resume and object finding still worked, and the player HUD rendered without the scene title or zoom controls.
 
+## Hit-area debugging
+- Added an extensible Debug section to the pause menu with a toggle for the exact rectangular hit regions currently used by gameplay.
+- Current hit detection is normalized rectangle based, not alpha-mask based; independent item PNGs are tray art and are not aligned scene cutouts.
+
 ## Release follow-ups requiring account-owned inputs
 - Confirm final App Store name, bundle identifier, developer/support identity, signing team, and App Store Connect metadata before submission.

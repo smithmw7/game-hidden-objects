@@ -29,6 +29,7 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
   private readonly gestures = new Map<number, { x: number; y: number; distance: number }>();
   private lastPinchDistance = 0;
   private lastPinchMidpoint?: { x: number; y: number };
+  private debugHitAreas?: Phaser.GameObjects.Graphics;
 
   constructor() {
     super("StaticHiddenObjectScene");
@@ -92,6 +93,13 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
       });
     });
 
+    this.debugHitAreas = this.add.graphics().setDepth(100).setVisible(false);
+    this.debugHitAreas.fillStyle(0xa9c8e8, 0.28).lineStyle(2, 0xe6f2ff, 0.95);
+    level.objects.forEach((object) => {
+      const bounds = normalizedRectToScreen(object.hitRegion, this.source, this.transform);
+      this.debugHitAreas?.fillRect(bounds.x, bounds.y, bounds.width, bounds.height).strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+    });
+
     this.session.start();
     this.payload.onProgress?.([], level.objects.length);
     this.payload.onHintsChanged?.(level.rules.availableHints);
@@ -132,6 +140,10 @@ export class StaticHiddenObjectScene extends Phaser.Scene {
       visibleWorld: this.cameraController?.visibleWorld,
       focalProbe: this.cameraController?.worldAtScreen({ x: 120, y: 300 })
     };
+  }
+
+  setHitAreasVisible(visible: boolean): void {
+    this.debugHitAreas?.setVisible(visible);
   }
 
   requestHint(): boolean {
