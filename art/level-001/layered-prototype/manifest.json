@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "prototypeOnly": true,
+  "canvas": { "width": 1085, "height": 1450 },
+  "baseLayer": "base-empty.png",
+  "occlusionLayers": [],
+  "items": [
+    {
+      "id": "buddha",
+      "sceneAsset": "items/alpha/buddha.png",
+      "sourceAsset": "items/source/buddha.png",
+      "placementStatus": "unregistered",
+      "depth": 100,
+      "occluderIds": [],
+      "hitTest": { "mode": "alpha", "alphaThreshold": 24, "touchDilationPx": 8 }
+    },
+    {
+      "id": "key",
+      "sceneAsset": "items/alpha/key.png",
+      "sourceAsset": "items/source/key.png",
+      "placementStatus": "unregistered",
+      "depth": 100,
+      "occluderIds": [],
+      "hitTest": { "mode": "alpha", "alphaThreshold": 24, "touchDilationPx": 8 }
+    },
+    {
+      "id": "bird",
+      "sceneAsset": "items/alpha/bird.png",
+      "sourceAsset": "items/source/bird.png",
+      "placementStatus": "unregistered",
+      "depth": 100,
+      "occluderIds": [],
+      "hitTest": { "mode": "alpha", "alphaThreshold": 24, "touchDilationPx": 8 }
+    }
+  ]
+}

@@ -21,5 +21,10 @@ Validation passed with simulated mobile touch input: focal-point error under 0.0
 - Added an extensible Debug section to the pause menu with a toggle for the exact rectangular hit regions currently used by gameplay.
 - Current hit detection is normalized rectangle based, not alpha-mask based; independent item PNGs are tray art and are not aligned scene cutouts.
 
+## Layered static-art prototype
+- Established the intended three-pass static pipeline: empty environment, registered occlusion layers/masks, and registered transparent scene-item layers.
+- Generated an item-free room proof plus alpha placement prototypes for the scene-specific Buddha head, wall key, and ceramic bird under `art/level-001/layered-prototype/`.
+- Added a proposed manifest with alpha hit-test settings and deliberately left placements unregistered until alignment occurs in the Photoshop master.
+
 ## Release follow-ups requiring account-owned inputs
 - Confirm final App Store name, bundle identifier, developer/support identity, signing team, and App Store Connect metadata before submission.
